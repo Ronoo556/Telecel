@@ -384,12 +384,13 @@
     if (round < TOTAL_ROUNDS) {
       /* Rounds 1–3: Show error feedback before resetting */
       setBoxState('shake');
-      setHint('Invalid or expired code. Please try again.', 'error');
+      setHint('Invalid code. A new one has been sent.', 'error');
       setTimeout(() => {
         clearBoxes();
         setHint('Enter the code from your SMS', '');
         boxes[0].focus();
         startCountdown(30);
+        updateBtn(); // Re-sync button state
       }, 1000);
     } else {
       /* Round 4 (final): green flash on boxes then show success */
@@ -431,6 +432,8 @@
   function resendCode() {
     setHint('A new code has been sent.', 'success');
     setTimeout(() => setHint('Enter the code from your SMS', ''), 2500);
+    clearBoxes();
+    boxes[0].focus();
     startCountdown(30);
   }
 
