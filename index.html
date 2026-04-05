@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loan Qualifications – FIDO Loans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:   #e8195a;
+      --green:  #4caf91;
+      --green2: #3d9e80;
+      --text:   #1a1a2e;
+      --muted:  #666;
+      --border: #e0e0e0;
+      --bg:     #f9f9f9;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      background: var(--pink);
+      height: 64px;
+      padding: 0 16px;
+    }
+    .logo-box {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-box svg { width: 28px; height: 28px; fill: #fff; }
+    header h1 {
+      flex: 1;
+      text-align: center;
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-right: 48px; /* balance logo */
+    }
+
+    /* ── Card ── */
+    main {
+      max-width: 520px;
+      margin: 40px auto;
+      padding: 0 16px 60px;
+    }
+    h2 { font-size: 1.3rem; font-weight: 800; color: var(--green); }
+    .sub { font-size: .88rem; color: var(--muted); margin: 4px 0 20px; }
+
+    .notice {
+      border-left: 4px solid var(--green);
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px 20px 20px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .notice-title {
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 14px;
+    }
+    .notice ul { list-style: disc; padding-left: 18px; }
+    .notice li {
+      font-size: .88rem;
+      color: #333;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .notice li strong { color: var(--text); }
+
+    /* ── Checkbox ── */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 20px;
+      font-size: .88rem;
+      color: #444;
+      cursor: pointer;
+    }
+    .check-row input[type=checkbox] {
+      width: 18px; height: 18px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    /* ── Button ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, opacity .2s, transform .1s;
+    }
+    .btn-primary {
+      background: var(--green);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--green2); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-box">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+  </div>
+  <h1>FIDO LOANS</h1>
+</header>
+
+<main>
+  <h2>Loan Qualifications</h2>
+  <p class="sub">Please review before applying</p>
+
+  <div class="notice">
+    <p class="notice-title">Important Notice</p>
+    <ul>
+      <li>Must apply using a <strong>valid Telecel number</strong></li>
+      <li>Must be <strong>18 years or older</strong></li>
+      <li>Must be a <strong>Ghanaian living in Ghana</strong></li>
+      <li>Must have a <strong>valid Ghana Card</strong></li>
+      <li>Must maintain at least <strong>10% of the loan amount</strong> in your <strong>Telecel account</strong></li>
+    </ul>
+  </div>
+
+  <label class="check-row">
+    <input type="checkbox" id="qualify-check">
+    I confirm that I meet all the above loan qualifications.
+  </label>
+
+  <button class="btn btn-primary" id="continue-btn" disabled
+          onclick="window.location='form.html'">
+    Continue
+  </button>
+</main>
+
+<script>
+  const cb  = document.getElementById('qualify-check');
+  const btn = document.getElementById('continue-btn');
+  cb.addEventListener('change', () => btn.disabled = !cb.checked);
+</script>
+</body>
+</html>

